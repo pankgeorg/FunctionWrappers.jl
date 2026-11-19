@@ -73,6 +73,10 @@ end
 @static if VERSION >= v"1.12"
     # `--trim` verification accepts a run-time dispatch only if it is inferred as never returning.
     callee(f::GlobalRef) = getfield(f.mod, f.name)
+    # Julia 1.15 resolves the callee to a `Core.BindingPartition` in optimized IR.
+    @static if isdefined(Core, :BindingPartition)
+        callee(f::Core.BindingPartition) = f.restriction
+    end
     callee(f) = f
     @testset "Run-time dispatch in reinit_wrapper never returns" begin
         ci = first(code_typed(FunctionWrappers.reinit_wrapper, (F64F64Func,)))[1]
